@@ -6,7 +6,7 @@ import pandas as pd
 class ExcelSorter:
     def __init__(self):
         self.window = tk.Tk()
-        self.window.title("Excel Sorter")
+        self.window.title("Sorting Creation File Sorter")
         self.window.configure(bg="white")
 
         self.window.geometry("500x500")
