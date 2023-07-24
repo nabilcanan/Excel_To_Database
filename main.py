@@ -1,18 +1,16 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
 import pandas as pd
+import sqlite3
 
-
-class ExcelSorter:
+class ExcelToDBExporter:
     def __init__(self):
         self.window = tk.Tk()
-        self.window.title("Sorting Creation File Sorter")
+        self.window.title("Excel to Database Exporter")
         self.window.configure(bg="white")
-
         self.window.geometry("500x500")
 
         self.file_path = None
-        self.sort_columns = []
 
         self.create_widgets()
 
@@ -20,15 +18,10 @@ class ExcelSorter:
         self.file_label = tk.Label(self.window, text="", bg="white")
         self.file_label.pack(pady=10)
 
-        self.sort_award_button = tk.Button(self.window, text="Sort Award File!", command=self.sort_award_file,
+        self.export_to_db_button = tk.Button(self.window, text="Export to Database", command=self.export_to_db,
                                             font=("Times New Roman", 16, "bold"), bg="green", fg="white", width=20,
                                             height=2)
-        self.sort_award_button.pack(pady=10)
-
-        self.sort_backlog_button = tk.Button(self.window, text="Sort Backlog File!", command=self.sort_backlog_file,
-                                            font=("Times New Roman", 16, "bold"), bg="blue", fg="white", width=20,
-                                            height=2)
-        self.sort_backlog_button.pack(pady=10)
+        self.export_to_db_button.pack(pady=10)
 
     def select_file(self):
         file_path = filedialog.askopenfilename(title="Select Excel file",
@@ -41,44 +34,37 @@ class ExcelSorter:
             self.file_path = None
             self.file_label.config(text="No file selected")
 
-    def sort_award_file(self):
+    def export_to_db(self):
         self.select_file()
 
         if self.file_path:
-            self.sort_columns = ['Product ID', 'Award Cust ID']
-            self.sort_excel()
+            try:
+                # Read all sheets in the Excel file as a dictionary of DataFrames
+                excel_data = pd.read_excel(self.file_path, sheet_name=None)
 
-    def sort_backlog_file(self):
-        self.select_file()
+                # Ask the user to choose the location and name for the new database file
+                db_file_path = filedialog.asksaveasfilename(title="Save Database File",
+                                                            filetypes=(("SQLite Database", "*.db"),
+                                                                       ("All files", "*.*")))
+                if not db_file_path:
+                    # User canceled the save dialog
+                    return
 
-        if self.file_path:
-            self.sort_columns = ['Product ID', 'Backlog Entry']
-            self.sort_excel()
+                # Export each sheet to the SQLite database as a separate table
+                with sqlite3.connect(db_file_path) as conn:
+                    for sheet_name, sheet_data in excel_data.items():
+                        # Use the sheet_name as the table name
+                        sheet_data.to_sql(name=sheet_name, con=conn, index=False, if_exists="replace")
 
-    def sort_excel(self):
-        if not self.sort_columns:
-            messagebox.showerror("Error", "No columns selected for sorting.")
-            return
+                messagebox.showinfo("Success", "Excel sheets exported to the database as separate tables.")
 
-        try:
-            # Read the Excel file into a pandas DataFrame
-            df = pd.read_excel(self.file_path)
-
-            # Sort the DataFrame based on the selected columns
-            df = df.sort_values(by=self.sort_columns, ascending=[True, False])
-
-            # Save the sorted DataFrame back to the Excel file
-            df.to_excel(self.file_path, index=False)
-
-            messagebox.showinfo("Success", "Excel file sorted and saved successfully.")
-
-        except Exception as e:
-            messagebox.showerror("Error", str(e))
+            except Exception as e:
+                messagebox.showerror("Error", str(e))
 
     def run(self):
         self.window.mainloop()
 
 
-# Create an instance of the ExcelSorter and run the program
-sorter = ExcelSorter()
-sorter.run()
+# Create an instance of the ExcelToDBExporter and run the program
+exporter = ExcelToDBExporter()
+exporter.run()
