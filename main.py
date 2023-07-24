@@ -3,14 +3,17 @@ from tkinter import filedialog, messagebox
 import pandas as pd
 import sqlite3
 
+
 class ExcelToDBExporter:
     def __init__(self):
         self.window = tk.Tk()
         self.window.title("Excel to Database Exporter")
         self.window.configure(bg="white")
-        self.window.geometry("500x500")
+        self.window.geometry("500x200")
 
         self.file_path = None
+        self.file_label = None
+        self.export_to_db_button = None
 
         self.create_widgets()
 
@@ -19,8 +22,8 @@ class ExcelToDBExporter:
         self.file_label.pack(pady=10)
 
         self.export_to_db_button = tk.Button(self.window, text="Export to Database", command=self.export_to_db,
-                                            font=("Times New Roman", 16, "bold"), bg="green", fg="white", width=20,
-                                            height=2)
+                                             font=("Times New Roman", 16, "bold"), bg="green", fg="white", width=20,
+                                             height=2)
         self.export_to_db_button.pack(pady=10)
 
     def select_file(self):
@@ -40,7 +43,7 @@ class ExcelToDBExporter:
         if self.file_path:
             try:
                 # Read all sheets in the Excel file as a dictionary of DataFrames
-                excel_data = pd.read_excel(self.file_path, sheet_name=None)
+                excel_data = pd.read_excel(self.file_path, sheet_name=None, header=None)
 
                 # Ask the user to choose the location and name for the new database file
                 db_file_path = filedialog.asksaveasfilename(title="Save Database File",
